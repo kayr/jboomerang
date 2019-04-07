@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.kayr</groupId>
-    <artifactId>j-boomerang</artifactId>
+    <artifactId>jboomerang</artifactId>
     <version>0.1-SNAPSHOT</version>
 
     <name>j-boomerang</name>
@@ -19,6 +19,7 @@
     </properties>
 
     <dependencies>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

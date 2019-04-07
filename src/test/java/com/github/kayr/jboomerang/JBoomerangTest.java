@@ -40,6 +40,8 @@ public class JBoomerangTest {
         rm.withResource(MyResource::work);
         assertWorkExceptionsCloses(1, 0, 1, 1);
         assertEquals(0, rm.getOpenResources());
+        assertEquals(0, rm.getDiscriminatorSize());
+
 
     }
 
@@ -55,6 +57,8 @@ public class JBoomerangTest {
         rm.withResource(MyResource::work);
         assertWorkExceptionsCloses(3, 0, 3, 3);
         assertEquals(0, rm.getOpenResources());
+        assertEquals(0, rm.getDiscriminatorSize());
+
     }
 
     @Test
@@ -75,6 +79,8 @@ public class JBoomerangTest {
         });
         assertWorkExceptionsCloses(4, 0, 1, 1);
         assertEquals(0, rm.getOpenResources());
+        assertEquals(0, rm.getDiscriminatorSize());
+
 
     }
 
@@ -129,6 +135,8 @@ public class JBoomerangTest {
 
         assertWorkExceptionsCloses(3, 0, 3, 3);
         assertEquals(0, rm.getOpenResources());
+        assertEquals(0, rm.getDiscriminatorSize());
+
 
     }
 
@@ -172,7 +180,9 @@ public class JBoomerangTest {
         catch (Exception x) {
             assertWorkExceptionsCloses(2, 4, 3, 3);
         }
+
         assertEquals(0, rm.getOpenResources());
+        assertEquals(0, rm.getDiscriminatorSize());
 
 
     }
@@ -201,15 +211,22 @@ public class JBoomerangTest {
                     rm.consume(r3 -> {
 
                         assertEquals(2, rm.getOpenResources());
+                        assertEquals(JBoomerang.COMMON_DISCRIMINATOR,rm.currentDiscriminatorNotNull());
 
                         //OTHER TENANT
                         rm.withResource(otherTenant, Propagation.JOIN, JBoomerang.Args.none(), r22 -> {
+
+                            assertEquals(otherTenant,rm.currentDiscriminatorNotNull());
+
                             assertEquals(1, rm.getOpenResources(otherTenant));
 
                             r22.work();
 
                             return Void.TYPE;
                         });
+
+                        assertEquals(JBoomerang.COMMON_DISCRIMINATOR,rm.currentDiscriminatorNotNull());
+
 
                         rm.consume(Propagation.WITH_NEW, r4 -> {
 
@@ -234,6 +251,7 @@ public class JBoomerangTest {
         }
         assertEquals(0, rm.getOpenResources());
         assertEquals(0, rm.getOpenResources(otherTenant));
+        assertEquals(0, rm.getDiscriminatorSize());
 
 
     }

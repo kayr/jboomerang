@@ -14,6 +14,7 @@ public class JBoomerang<R> {
 
     private static final Logger LOG = LoggerFactory.getLogger(JBoomerang.class);
     private ThreadLocal<Map<Object, Deque<ResourceHolder<R>>>> resourceStack = ThreadLocal.withInitial(HashMap::new);
+    private ThreadLocal<Deque<Object>> discriminatorStack = ThreadLocal.withInitial(ArrayDeque::new);
     private ResourceFactory<R> resourceFactory;
 
     public JBoomerang(ResourceFactory<R> resourceFactory) {
@@ -48,6 +49,10 @@ public class JBoomerang<R> {
 
         Deque<ResourceHolder<R>> currentDeque = getCurrentDeque(discriminator);
 
+        //store the current discriminator
+        Deque<Object> currentDiscriminatorStack = discriminatorStack.get();
+        currentDiscriminatorStack.push(discriminator);
+
         try {
             resource = getResource(discriminator, propagation, currentDeque, args);
             LOG.trace("-------!!! Providing resource..{} Calls:[{}]  !!!-------", resourceFactory, resource.count);
@@ -72,6 +77,9 @@ public class JBoomerang<R> {
 
             }
             ExceptionUtil.sneakyThrow(x);
+        } finally {
+            //clear the discriminator
+            currentDiscriminatorStack.poll();
         }
         return null;
     }
@@ -166,6 +174,23 @@ public class JBoomerang<R> {
         return Optional.empty();
     }
 
+    public Object currentDiscriminatorNotNull() {
+        return currentDiscriminator().orElseThrow(() -> new IllegalStateException("no discriminator on call stack"));
+    }
+
+    public Optional<Object> currentDiscriminator() {
+        Object peek = discriminatorStack.get().peek();
+        return Optional.ofNullable(peek);
+    }
+
+    public Object currentDiscriminatorOrCommon() {
+        return currentDiscriminator().orElse(COMMON_DISCRIMINATOR);
+    }
+
+
+    int getDiscriminatorSize() {
+        return discriminatorStack.get().size();
+    }
 
     public interface ResourceFactory<R> {
 
@@ -184,15 +209,15 @@ public class JBoomerang<R> {
             this.params = params;
         }
 
-        static Args of(Object... args) {
+        public static Args of(Object... args) {
             return new Args(args);
         }
 
-        static Args none() {
+        public static Args none() {
             return none;
         }
 
-        <T> T get(int i) {
+        public <T> T get(int i) {
             return (T) params[i];
         }
     }
