@@ -6,7 +6,7 @@
 
     <groupId>com.github.kayr</groupId>
     <artifactId>jboomerang</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1</version>
 
     <name>j-boomerang</name>
     <!-- FIXME change it to the project's website -->
