@@ -9,5 +9,5 @@ When the thread or function scope completes execution. The resource is closed of
 
 This is useful when when you need to implement complex things like automatic transaction management. One transaction will be created per thread. 
 
-Hovewever you can decide to create a new transaction on top of the existing one. Of the last transaction completes the resource falls back to the previous transaction until there are no more.
+Hovewever you can decide to create a new transaction on top of the existing one. After the last transaction completes the resource falls back to the previous transaction until there are no more.
 
