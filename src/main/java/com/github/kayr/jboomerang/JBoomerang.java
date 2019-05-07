@@ -113,6 +113,7 @@ public class JBoomerang<R> {
                 throw x;
             } catch (Exception x) {
                 LOG.warn("Error closing resource", x);
+                throw new BoomerangCloseException("error closing resource", x, resourceFactory);
             } finally {
                 if (resource.isComplete()) {
                     currentDeque.poll();

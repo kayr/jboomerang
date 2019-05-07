@@ -332,6 +332,52 @@ public class JBoomerangTest {
         }
         catch (BoomerangCloseException x) {
             assertWorkExceptionsCloses(3, 1, 3, 3);
+            assertNull(x.getCause());
+        }
+        assertEquals(0, rm.getOpenResources());
+
+
+    }
+
+    @Test
+    public void withResourceThrowingResourceErrorForGenericException() {
+        try {
+            /*
+            work
+                new-rsrc
+                    work
+                      new work
+                throw exception
+             */
+            rm.withResource(r1 -> {
+                r1.work();
+
+                rm.consume(Propagation.WITH_NEW, r2 -> {
+
+                    assertEquals(2, rm.getOpenResources());
+
+                    rm.consume(r3 -> {
+                        r3.work();
+                        assertEquals(2, rm.getOpenResources());
+
+                        rm.consume(Propagation.WITH_NEW, MyResource::work);
+                    });
+
+                    r2.makeCloseNoise = true;
+                    r2.useGenericException = true;
+                });
+
+                fail("Not expecting to be here");
+
+                return Void.TYPE;
+            });
+            fail("Did not expect to reach here");
+        } catch (BoomerangCloseException x) {
+            Throwable cause = x.getCause();
+            assertNotNull(cause);
+            assertTrue(!(cause instanceof BoomerangCloseException));
+            assertEquals("Make Noise generic", cause.getMessage());
+            assertWorkExceptionsCloses(3, 1, 3, 3);
         }
         assertEquals(0, rm.getOpenResources());
 
@@ -352,8 +398,13 @@ public class JBoomerangTest {
 
         public void close() {
             closes++;
-            if (makeCloseNoise)
-                throw new BoomerangCloseException("Make Noise");
+            if (makeCloseNoise) {
+                if (useGenericException) {
+                    ExceptionUtil.sneakyThrow(new Exception("Make Noise generic"));
+                } else {
+                    throw new BoomerangCloseException("Make Noise");
+                }
+            }
         }
 
         void onException() {
@@ -361,6 +412,7 @@ public class JBoomerangTest {
         }
 
         boolean makeCloseNoise = false;
+        boolean useGenericException = false;
     }
 
 
