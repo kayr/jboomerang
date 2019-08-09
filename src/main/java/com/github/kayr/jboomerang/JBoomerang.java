@@ -38,6 +38,13 @@ public class JBoomerang<R> {
         });
     }
 
+    public void consume(Object discriminator, Propagation propagation, JBoomerangConsumer<R> fx) {
+        withResource(discriminator, propagation, Args.none(), r -> {
+            fx.accept(r);
+            return Void.TYPE;
+        });
+    }
+
     public <V> V withResource(Propagation propagation, JBoomerangFunction<R, V> fx) {
         return withResource(COMMON_DISCRIMINATOR, propagation, Args.none(), fx);
     }
@@ -156,16 +163,17 @@ public class JBoomerang<R> {
         return e;
     }
 
-    public int getOpenResources() {
-        return getOpenResources(COMMON_DISCRIMINATOR);
+    public int countOpenResources() {
+        Optional<Object> o = currentDiscriminator();
+        return o.map(this::countOpenResources).orElse(0);
     }
 
-    public int getOpenResources(Object discriminator) {
+    public int countOpenResources(Object discriminator) {
         return resourceStack.get().get(discriminator).size();
     }
 
     public Optional<R> getCurrentResource() {
-        return getCurrentResource(COMMON_DISCRIMINATOR);
+        return currentDiscriminator().flatMap(this::getCurrentResource);
     }
 
     public Optional<R> getCurrentResource(Object discriminator) {

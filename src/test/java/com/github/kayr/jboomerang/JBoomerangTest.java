@@ -39,7 +39,7 @@ public class JBoomerangTest {
      */
         rm.withResource(MyResource::work);
         assertWorkExceptionsCloses(1, 0, 1, 1);
-        assertEquals(0, rm.getOpenResources());
+        assertEquals(0, rm.countOpenResources());
         assertEquals(0, rm.getDiscriminatorSize());
 
 
@@ -56,7 +56,7 @@ public class JBoomerangTest {
         rm.withResource(MyResource::work);
         rm.withResource(MyResource::work);
         assertWorkExceptionsCloses(3, 0, 3, 3);
-        assertEquals(0, rm.getOpenResources());
+        assertEquals(0, rm.countOpenResources());
         assertEquals(0, rm.getDiscriminatorSize());
 
     }
@@ -78,7 +78,7 @@ public class JBoomerangTest {
             });
         });
         assertWorkExceptionsCloses(4, 0, 1, 1);
-        assertEquals(0, rm.getOpenResources());
+        assertEquals(0, rm.countOpenResources());
         assertEquals(0, rm.getDiscriminatorSize());
 
 
@@ -94,6 +94,8 @@ public class JBoomerangTest {
          */
         assertNull(rm.getCurrentResource().orElse(null));
 
+        assertNull(rm.getCurrentResource(JBoomerang.COMMON_DISCRIMINATOR).orElse(null));
+
         rm.withResource(r1 -> {
             r1.work();
 
@@ -103,7 +105,7 @@ public class JBoomerangTest {
                 r2.work();
                 assertEquals(rm.getCurrentResource().orElse(null),r2);
 
-                assertEquals(2, rm.getOpenResources());
+                assertEquals(2, rm.countOpenResources());
 
                 rm.withResource(r3 -> {
 
@@ -111,14 +113,14 @@ public class JBoomerangTest {
                     assertEquals(rm.getCurrentResource().orElse(null),r3);
 
 
-                    assertEquals(2, rm.getOpenResources());
+                    assertEquals(2, rm.countOpenResources());
 
                     return rm.withResource(Propagation.WITH_NEW, r4 -> {
 
                         assertEquals(rm.getCurrentResource().orElse(null),r4);
 
 
-                        assertEquals(3, rm.getOpenResources());
+                        assertEquals(3, rm.countOpenResources());
 
                         return r1.work();
                     });
@@ -126,7 +128,7 @@ public class JBoomerangTest {
 
             });
 
-            assertEquals(1, rm.getOpenResources());
+            assertEquals(1, rm.countOpenResources());
 
             return Void.TYPE;
         });
@@ -134,7 +136,7 @@ public class JBoomerangTest {
         assertNull(rm.getCurrentResource().orElse(null));
 
         assertWorkExceptionsCloses(3, 0, 3, 3);
-        assertEquals(0, rm.getOpenResources());
+        assertEquals(0, rm.countOpenResources());
         assertEquals(0, rm.getDiscriminatorSize());
 
 
@@ -155,11 +157,11 @@ public class JBoomerangTest {
                 rm.withResource(Propagation.WITH_NEW, r2 -> {
                     r2.work();
 
-                    assertEquals(2, rm.getOpenResources());
+                    assertEquals(2, rm.countOpenResources());
 
                     rm.consume(r3 -> {
 
-                        assertEquals(2, rm.getOpenResources());
+                        assertEquals(2, rm.countOpenResources());
 
                         rm.consume(Propagation.WITH_NEW, r4 -> {
 
@@ -171,7 +173,7 @@ public class JBoomerangTest {
                     return Void.TYPE;
                 });
 
-                assertEquals(1, rm.getOpenResources());
+                assertEquals(1, rm.countOpenResources());
 
                 return Void.TYPE;
             });
@@ -181,7 +183,7 @@ public class JBoomerangTest {
             assertWorkExceptionsCloses(2, 4, 3, 3);
         }
 
-        assertEquals(0, rm.getOpenResources());
+        assertEquals(0, rm.countOpenResources());
         assertEquals(0, rm.getDiscriminatorSize());
 
 
@@ -206,11 +208,11 @@ public class JBoomerangTest {
                 rm.withResource(Propagation.WITH_NEW, r2 -> {
                     r2.work();
 
-                    assertEquals(2, rm.getOpenResources());
+                    assertEquals(2, rm.countOpenResources());
 
                     rm.consume(r3 -> {
 
-                        assertEquals(2, rm.getOpenResources());
+                        assertEquals(2, rm.countOpenResources());
                         assertEquals(JBoomerang.COMMON_DISCRIMINATOR,rm.currentDiscriminatorNotNull());
 
                         //OTHER TENANT
@@ -218,7 +220,7 @@ public class JBoomerangTest {
 
                             assertEquals(otherTenant,rm.currentDiscriminatorNotNull());
 
-                            assertEquals(1, rm.getOpenResources(otherTenant));
+                            assertEquals(1, rm.countOpenResources(otherTenant));
 
                             r22.work();
 
@@ -239,8 +241,7 @@ public class JBoomerangTest {
                 });
 
 
-
-                assertEquals(1, rm.getOpenResources());
+                assertEquals(1, rm.countOpenResources());
 
                 return Void.TYPE;
             });
@@ -249,8 +250,8 @@ public class JBoomerangTest {
         catch (Exception x) {
             assertWorkExceptionsCloses(3, 4, 4, 4);
         }
-        assertEquals(0, rm.getOpenResources());
-        assertEquals(0, rm.getOpenResources(otherTenant));
+        assertEquals(0, rm.countOpenResources());
+        assertEquals(0, rm.countOpenResources(otherTenant));
         assertEquals(0, rm.getDiscriminatorSize());
 
 
@@ -271,11 +272,11 @@ public class JBoomerangTest {
 
                 rm.consume(Propagation.WITH_NEW, r2 -> {
 
-                    assertEquals(2, rm.getOpenResources());
+                    assertEquals(2, rm.countOpenResources());
 
                     rm.consume(r3 -> {
                         r3.work();
-                        assertEquals(2, rm.getOpenResources());
+                        assertEquals(2, rm.countOpenResources());
 
                         rm.consume(Propagation.WITH_NEW, MyResource::work);
                     });
@@ -283,7 +284,7 @@ public class JBoomerangTest {
                     throw new RuntimeException();
                 });
 
-                assertEquals(1, rm.getOpenResources());
+                assertEquals(1, rm.countOpenResources());
 
                 return Void.TYPE;
             });
@@ -292,7 +293,7 @@ public class JBoomerangTest {
         catch (Exception x) {
             assertWorkExceptionsCloses(3, 2, 3, 3);
         }
-        assertEquals(0, rm.getOpenResources());
+        assertEquals(0, rm.countOpenResources());
 
 
     }
@@ -312,11 +313,11 @@ public class JBoomerangTest {
 
                 rm.consume(Propagation.WITH_NEW, r2 -> {
 
-                    assertEquals(2, rm.getOpenResources());
+                    assertEquals(2, rm.countOpenResources());
 
                     rm.consume(r3 -> {
                         r3.work();
-                        assertEquals(2, rm.getOpenResources());
+                        assertEquals(2, rm.countOpenResources());
 
                         rm.consume(Propagation.WITH_NEW, MyResource::work);
                     });
@@ -334,7 +335,7 @@ public class JBoomerangTest {
             assertWorkExceptionsCloses(3, 1, 3, 3);
             assertNull(x.getCause());
         }
-        assertEquals(0, rm.getOpenResources());
+        assertEquals(0, rm.countOpenResources());
 
 
     }
@@ -354,11 +355,11 @@ public class JBoomerangTest {
 
                 rm.consume(Propagation.WITH_NEW, r2 -> {
 
-                    assertEquals(2, rm.getOpenResources());
+                    assertEquals(2, rm.countOpenResources());
 
                     rm.consume(r3 -> {
                         r3.work();
-                        assertEquals(2, rm.getOpenResources());
+                        assertEquals(2, rm.countOpenResources());
 
                         rm.consume(Propagation.WITH_NEW, MyResource::work);
                     });
@@ -375,13 +376,30 @@ public class JBoomerangTest {
         } catch (BoomerangCloseException x) {
             Throwable cause = x.getCause();
             assertNotNull(cause);
-            assertTrue(!(cause instanceof BoomerangCloseException));
+            assertFalse(cause instanceof BoomerangCloseException);
             assertEquals("Make Noise generic", cause.getMessage());
             assertWorkExceptionsCloses(3, 1, 3, 3);
         }
-        assertEquals(0, rm.getOpenResources());
+        assertEquals(0, rm.countOpenResources());
 
 
+    }
+
+    @Test
+    public void testCurrentDiscriminatorReturnsCurrentResource() {
+        rm.consume(r1 -> rm.consume(r2 -> {
+            assertEquals(1, rm.countOpenResources());
+            rm.consume(Propagation.WITH_NEW, r3 -> {
+                assertEquals(2, rm.countOpenResources());
+                assertEquals(JBoomerang.COMMON_DISCRIMINATOR, rm.currentDiscriminatorNotNull());
+                rm.consume("newDiscriminator", Propagation.JOIN, r11 -> {
+                    assertEquals(1, rm.countOpenResources());
+                    assertEquals("newDiscriminator", rm.currentDiscriminatorNotNull());
+                });
+                assertEquals(2, rm.countOpenResources());
+                assertEquals(JBoomerang.COMMON_DISCRIMINATOR, rm.currentDiscriminatorNotNull());
+            });
+        }));
     }
 
 
