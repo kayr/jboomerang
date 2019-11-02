@@ -126,7 +126,6 @@ public class JBoomerang<R> {
             } catch (BoomerangCloseException x) {
                 throw x;
             } catch (Exception x) {
-                LOG.warn("Error closing resource", x);
                 throw new BoomerangCloseException("error closing resource", x, resourceFactory);
             } finally {
                 if (resource.isComplete()) {
