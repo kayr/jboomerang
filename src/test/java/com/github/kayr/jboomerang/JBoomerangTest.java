@@ -389,9 +389,19 @@ public class JBoomerangTest {
     public void testCurrentDiscriminatorReturnsCurrentResource() {
         rm.consume(r1 -> rm.consume(r2 -> {
             assertEquals(1, rm.countOpenResources());
+            assertEquals(1, rm.countDiscriminators());
+        }));
+
+        assertEquals(0, rm.countDiscriminators());
+
+
+        rm.consume(r1 -> rm.consume(r2 -> {
+            assertEquals(1, rm.countOpenResources());
             rm.consume(Propagation.WITH_NEW, r3 -> {
                 assertEquals(2, rm.countOpenResources());
                 assertEquals(JBoomerang.COMMON_DISCRIMINATOR, rm.currentDiscriminatorNotNull());
+                assertEquals(1, rm.countDiscriminators());
+
                 rm.consume("newDiscriminator", Propagation.JOIN, r11 -> {
                     assertEquals(1, rm.countOpenResources());
                     assertEquals("newDiscriminator", rm.currentDiscriminatorNotNull());
@@ -399,7 +409,10 @@ public class JBoomerangTest {
                 assertEquals(2, rm.countOpenResources());
                 assertEquals(JBoomerang.COMMON_DISCRIMINATOR, rm.currentDiscriminatorNotNull());
             });
+            assertEquals(2, rm.countDiscriminators());
         }));
+
+        assertEquals(0, rm.countDiscriminators());
     }
 
 

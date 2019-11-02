@@ -87,11 +87,18 @@ public class JBoomerang<R> {
         } finally {
             //clear the discriminator
             currentDiscriminatorStack.poll();
+            mayBeClearThreadLocal(currentDiscriminatorStack);
         }
         return null;
     }
 
 
+    private void mayBeClearThreadLocal(Deque<Object> currentDiscriminatorStack) {
+        if (currentDiscriminatorStack.isEmpty()) {
+            discriminatorStack.remove();
+            resourceStack.remove();
+        }
+    }
 
 
     private void closeResourceSilently(Object discriminator, ResourceHolder<R> resource, Deque<ResourceHolder<R>> currentDeque) {
@@ -163,13 +170,17 @@ public class JBoomerang<R> {
         return e;
     }
 
+    public int countDiscriminators(){
+        return resourceStack.get().size();
+    }
+
     public int countOpenResources() {
         Optional<Object> o = currentDiscriminator();
         return o.map(this::countOpenResources).orElse(0);
     }
 
     public int countOpenResources(Object discriminator) {
-        return resourceStack.get().get(discriminator).size();
+        return getCurrentDeque(discriminator).size();
     }
 
     public Optional<R> getCurrentResource() {
