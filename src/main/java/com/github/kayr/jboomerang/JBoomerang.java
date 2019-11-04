@@ -10,7 +10,7 @@ public class JBoomerang<R> {
     public static final Object COMMON_DISCRIMINATOR = new Object();
 
 
-    public enum Propagation {WITH_NEW, JOIN}
+    public enum Propagation {WITH_NEW, JOIN, REQUIRED}
 
     private static final Logger LOG = LoggerFactory.getLogger(JBoomerang.class);
     private ThreadLocal<Map<Object, Deque<ResourceHolder<R>>>> resourceStack = ThreadLocal.withInitial(HashMap::new);
@@ -136,18 +136,24 @@ public class JBoomerang<R> {
     }
 
     private ResourceHolder<R> getResource(Object discriminator, Propagation propagation, Deque<ResourceHolder<R>> currentDeque, Args args) {
-        if (currentDeque.isEmpty()) {
-            return createResource(discriminator, currentDeque, args);
+
+
+        switch (propagation) {
+            case REQUIRED:
+                if (currentDeque.isEmpty())
+                    throw new IllegalStateException("a resource is required ot be available at this time" +
+                            " however non is available");
+                //fall through like a join
+            case JOIN:
+                if (currentDeque.isEmpty())
+                    return createResource(discriminator, currentDeque, args);
+                else
+                    return currentDeque.peek();
+            case WITH_NEW:
+                return createResource(discriminator, currentDeque, args);
+            default:
+                throw new UnsupportedOperationException("Propagation not supported: " + propagation);
         }
-
-        if (propagation == Propagation.WITH_NEW) {
-            return createResource(discriminator, currentDeque, args);
-        } else if (propagation == Propagation.JOIN) {
-            return currentDeque.peek();
-        }
-
-        throw new UnsupportedOperationException("Propagation not supported: " + propagation);
-
     }
 
 

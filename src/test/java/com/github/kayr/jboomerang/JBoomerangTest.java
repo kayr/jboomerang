@@ -447,6 +447,24 @@ public class JBoomerangTest {
     }
 
 
+    @Test
+    public void testRequiredPropagation() {
+        try {
+            rm.consume(Propagation.REQUIRED, r -> {
+                fail("not expecting to be here");
+            });
+        } catch (IllegalStateException e) {
+            assertEquals("a resource is required ot be available at this time however non is available", e.getMessage());
+        }
+
+        rm.consume(Propagation.JOIN, r -> {
+            assertEquals(1L, rm.countOpenResources());
+            rm.consume(Propagation.REQUIRED, r2 -> {
+                assertEquals(1L, rm.countOpenResources());
+            });
+        });
+    }
+
     class MyFactory implements JBoomerang.ResourceFactory<MyResource> {
 
         @Override
