@@ -69,21 +69,23 @@ public class JBoomerang<R> {
             closeResourceExplosively(discriminator, resource, currentDeque);
 
             return result;
-        } catch (Throwable x) {//NOSONAR
+        } catch (Throwable usageOrCloseExcption) {//NOSONAR
 
             if (!attemptedClose) {
                 //if did not attempt close then this was an error of resource usage.
                 //hence close the resource
-                LOG.error("!!!! Error providing resource..{}", resourceFactory);
-                LOG.trace("Error while providing/using resource: {}" + resourceFactory, x);
+                if (resource != null && resource.isGoingToCompleteAfterClose()) {
+                    resourceFactory.onException(discriminator, resource.getResource());
+                }
 
-                Optional.ofNullable(resource)
-                        .ifPresent(t -> resourceFactory.onException(discriminator, t.getResource()));
-
-                closeResourceSilently(discriminator, resource, currentDeque);
+                try {
+                    closeResourceExplosively(discriminator, resource, currentDeque);
+                } catch (Throwable suppressed) {//NOSONAR
+                    usageOrCloseExcption.addSuppressed(suppressed);
+                }
 
             }
-            ExceptionUtil.sneakyThrow(x);
+            ExceptionUtil.sneakyThrow(usageOrCloseExcption);
         } finally {
             //clear the discriminator
             currentDiscriminatorStack.poll();
@@ -101,21 +103,7 @@ public class JBoomerang<R> {
     }
 
 
-    private void closeResourceSilently(Object discriminator, ResourceHolder<R> resource, Deque<ResourceHolder<R>> currentDeque) {
-
-        try {
-            closeResource(discriminator, resource, currentDeque);
-        } catch (BoomerangCloseException x) {
-            LOG.warn("Error closing resource", x);
-        }
-
-    }
-
     private void closeResourceExplosively(Object discriminator, ResourceHolder<R> resource, Deque<ResourceHolder<R>> currentDeque) {
-        closeResource(discriminator, resource, currentDeque);
-    }
-
-    private void closeResource(Object discriminator, ResourceHolder<R> resource, Deque<ResourceHolder<R>> currentDeque) {
         if (resource != null) {
             try {
                 resource.decrement();
@@ -278,6 +266,10 @@ public class JBoomerang<R> {
 
         private boolean isComplete() {
             return count <= 0;
+        }
+
+        private boolean isGoingToCompleteAfterClose(){
+            return count <= 1;
         }
 
         int getCount() {

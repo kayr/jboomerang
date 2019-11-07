@@ -180,7 +180,7 @@ public class JBoomerangTest {
             fail("Did not expect to reach here");
         }
         catch (Exception x) {
-            assertWorkExceptionsCloses(2, 4, 3, 3);
+            assertWorkExceptionsCloses(2, 3, 3, 3);
         }
 
         assertEquals(0, rm.countOpenResources());
@@ -248,7 +248,7 @@ public class JBoomerangTest {
             fail("Did not expect to reach here");
         }
         catch (Exception x) {
-            assertWorkExceptionsCloses(3, 4, 4, 4);
+            assertWorkExceptionsCloses(3, 3, 4, 4);
         }
         assertEquals(0, rm.countOpenResources());
         assertEquals(0, rm.countOpenResources(otherTenant));
@@ -332,8 +332,54 @@ public class JBoomerangTest {
             fail("Did not expect to reach here");
         }
         catch (BoomerangCloseException x) {
+            x.printStackTrace();
             assertWorkExceptionsCloses(3, 1, 3, 3);
             assertNull(x.getCause());
+        }
+        assertEquals(0, rm.countOpenResources());
+
+
+    }
+
+    @Test
+    public void withResourceThrowingResourceErrorAndWorkError() {
+        try {
+            /*
+            work
+                new-rsrc
+                    work
+                      new work
+                throw exception
+             */
+            rm.withResource(r1 -> {
+                r1.work();
+
+                rm.consume(Propagation.WITH_NEW, r2 -> {
+
+                    assertEquals(2, rm.countOpenResources());
+
+                    rm.consume(r3 -> {
+                        r3.work();
+                        assertEquals(2, rm.countOpenResources());
+
+                        rm.consume(Propagation.WITH_NEW, MyResource::work);
+                    });
+
+                    r2.makeCloseNoise = true;
+                    throw new RuntimeException("my work exception");
+                });
+
+                fail("Not expecting to be here");
+
+                return Void.TYPE;
+            });
+            fail("Did not expect to reach here");
+        }
+        catch (RuntimeException x) {
+            assertWorkExceptionsCloses(3, 2, 3, 3);
+            assertNull(x.getCause());
+            assertEquals("my work exception", x.getMessage());
+            assertEquals("Make Noise", x.getSuppressed()[0].getMessage());
         }
         assertEquals(0, rm.countOpenResources());
 
