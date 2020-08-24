@@ -10,7 +10,7 @@ public class JBoomerang<R> {
     public static final Object COMMON_DISCRIMINATOR = new Object();
 
 
-    public enum Propagation {WITH_NEW, JOIN, REQUIRED}
+    public enum Propagation {WITH_NEW, JOIN, REQUIRED, NONE}
 
     private static final Logger LOG = LoggerFactory.getLogger(JBoomerang.class);
     private ThreadLocal<Map<Object, Deque<ResourceHolder<R>>>> resourceStack = ThreadLocal.withInitial(HashMap::new);
@@ -50,6 +50,10 @@ public class JBoomerang<R> {
     }
 
     public <V> V withResource(Object discriminator, Propagation propagation, Args args, JBoomerangFunction<R, V> fx) {
+
+        if (propagation == Propagation.NONE && getCurrentResource().isPresent()) {
+            throw new IllegalStateException("cannot executed function with an open resource["+resourceFactory+"]");
+        }
 
         ResourceHolder<R> resource = null;
         boolean attemptedClose = false;

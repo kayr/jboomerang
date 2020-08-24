@@ -1,6 +1,7 @@
 package com.github.kayr.jboomerang;
 
 import com.github.kayr.jboomerang.JBoomerang.Propagation;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -505,10 +506,24 @@ public class JBoomerangTest {
 
         rm.consume(Propagation.JOIN, r -> {
             assertEquals(1L, rm.countOpenResources());
-            rm.consume(Propagation.REQUIRED, r2 -> {
-                assertEquals(1L, rm.countOpenResources());
-            });
+            rm.consume(Propagation.REQUIRED, r2 -> assertEquals(1L, rm.countOpenResources()));
         });
+    }
+
+    @Test
+    public void testNONE_Propagation() {
+
+        rm.consume(Propagation.JOIN, r -> {
+            assertEquals(1L, rm.countOpenResources());
+            r.work();
+            try {
+                rm.consume(Propagation.NONE, r2 -> Assert.fail("not expected here"));
+            } catch (IllegalStateException x) {
+                final String message = x.getMessage();
+                Assert.assertTrue(message.contains("cannot executed function with an open resource"));
+            }
+        });
+        assertWorkExceptionsCloses(1, 0, 1, 1);
     }
 
     class MyFactory implements JBoomerang.ResourceFactory<MyResource> {
