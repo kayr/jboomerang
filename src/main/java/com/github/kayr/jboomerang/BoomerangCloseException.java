@@ -5,7 +5,7 @@ package com.github.kayr.jboomerang;
  */
 public class BoomerangCloseException extends RuntimeException {
 
-    private final transient  JBoomerang.ResourceFactory factory;
+    private final transient JBoomerang.ResourceFactory<?> factory;
 
 
     public BoomerangCloseException(String message) {
@@ -13,12 +13,12 @@ public class BoomerangCloseException extends RuntimeException {
         this.factory = null;
     }
 
-    public BoomerangCloseException(String message, Throwable x, JBoomerang.ResourceFactory resourceFactory) {
+    public BoomerangCloseException(String message, Throwable x, JBoomerang.ResourceFactory<?> resourceFactory) {
         super(message, x);
         this.factory = resourceFactory;
     }
 
-    public JBoomerang.ResourceFactory getFactory() {
+    public JBoomerang.ResourceFactory<?> getFactory() {
         return factory;
     }
 
