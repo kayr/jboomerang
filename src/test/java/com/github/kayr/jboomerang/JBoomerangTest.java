@@ -524,6 +524,10 @@ public class JBoomerangTest {
             }
         });
         assertWorkExceptionsCloses(1, 0, 1, 1);
+
+        rm.consume(Propagation.NONE, Assert::assertNull);
+        assertWorkExceptionsCloses(1, 0, 1, 1);
+
     }
 
     class MyFactory implements JBoomerang.ResourceFactory<MyResource> {

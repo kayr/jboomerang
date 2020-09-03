@@ -51,9 +51,10 @@ public class JBoomerang<R> {
 
     public <V> V withResource(Object discriminator, Propagation propagation, Args args, JBoomerangFunction<R, V> fx) {
 
-        if (propagation == Propagation.NONE && getCurrentResource().isPresent()) {
-            throw new IllegalStateException("cannot executed function with an open resource["+resourceFactory+"]");
+        if (propagation == Propagation.NONE) {
+            return handleNonePropagation(fx);
         }
+
 
         ResourceHolder<R> resource = null;
         boolean attemptedClose = false;
@@ -96,6 +97,19 @@ public class JBoomerang<R> {
             mayBeClearThreadLocal(currentDiscriminatorStack);
         }
         return null;
+    }
+
+    private <V> V handleNonePropagation(JBoomerangFunction<R, V> fx) {
+        if (getCurrentResource().isPresent())
+            throw new IllegalStateException("cannot executed function with an open resource[" + resourceFactory + "]");
+        else {
+            try {
+                return fx.apply(null);
+            } catch (Exception e) {
+                ExceptionUtil.sneakyThrow(e);
+                throw new UnsupportedOperationException("should never reach here");
+            }
+        }
     }
 
 
