@@ -5,7 +5,7 @@
 
     <groupId>io.github.kayr</groupId>
     <artifactId>jboomerang</artifactId>
-    <version>0.2</version>
+    <version>0.3-SNAPSHOT</version>
 
     <name>j-boomerang</name>
     <!-- FIXME change it to the project's website -->
@@ -47,7 +47,7 @@
         <connection>scm:git:https://github.com/kayr/jboomerang.git</connection>
         <developerConnection>scm:git:https://github.com/kayr/jboomerang.git</developerConnection>
         <url>https://github.com/kayr/jboomerang.git</url>
-      <tag>jboomerang-0.2</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <build>
