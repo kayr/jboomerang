@@ -1,4 +1,6 @@
 # jboomerang
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.kayr/jboomerang/badge.svg?style=plastic)](https://maven-badges.herokuapp.com/maven-central/io.github.kayr/jboomerang)
+
 A java thread safe, functional, automatic thread local resource manager. 
 .
 When asked to create a new resource... it creates and stores it. When asked to create the resource again.. it returns the same resource it created before(hence the term Boomerang) unless explicitly asked to create a new one.
