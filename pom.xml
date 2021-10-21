@@ -167,6 +167,8 @@
                     <useReleaseProfile>false</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
                     <goals>deploy</goals>
+                    <username>${github.user}</username>
+                    <password>${github.password}</password>
                 </configuration>
             </plugin>
 
