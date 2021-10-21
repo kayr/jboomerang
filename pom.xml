@@ -6,7 +6,7 @@
 
     <groupId>io.github.kayr</groupId>
     <artifactId>jboomerang</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.8-SNAPSHOT</version>
 
     <name>j-boomerang</name>
     <url>https://github.com/kayr/jboomerang</url>
