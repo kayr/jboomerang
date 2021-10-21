@@ -9,8 +9,14 @@
     <version>0.2-SNAPSHOT</version>
 
     <name>j-boomerang</name>
-    <!-- FIXME change it to the project's website -->
-    <url>http://www.example.com</url>
+    <url>https://github.com/kayr/jboomerang</url>
+    <description>A java thread safe, functional automatic thread local resource manager. </description>
+    <developers>
+        <developer>
+            <name>Ronald Kayondo</name>
+            <email>noryak1234@gmail.com</email>
+        </developer>
+    </developers>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
